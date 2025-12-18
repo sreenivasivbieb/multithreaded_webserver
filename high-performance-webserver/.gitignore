@@ -1,0 +1,30 @@
+# Build artifacts
+target/
+bin/
+*.class
+
+# Maven
+.mvn/
+mvn.cmd
+mvnw
+mvnw.cmd
+
+# IDE files
+.idea/
+.vscode/
+*.iml
+.project
+.classpath
+.settings/
+
+# Logs
+*.log
+server.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Compiled files
+*.jar
+!target/*.jar

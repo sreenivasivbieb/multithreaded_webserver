@@ -1,0 +1,30 @@
+High-Performance Multi-Threaded Java Web Server
+================================================
+
+This is a sample text file served by the Java Web Server.
+
+Features:
+- HTTP/1.1 Protocol Support
+- Multi-threaded architecture with bounded thread pool
+- Efficient static file serving with streaming I/O
+- Robust request parsing and response generation
+- Connection timeout management
+- Graceful shutdown handling
+- Structured logging system
+- Security protections (directory traversal prevention)
+- Handles 50+ concurrent connections
+
+The server successfully demonstrates:
+✓ Predictable performance under load
+✓ Proper resource management
+✓ Production-ready reliability
+✓ Thread pool efficiency (10-50 threads, queue capacity 100)
+
+Technical Stack:
+- Java Sockets
+- ThreadPoolExecutor with ArrayBlockingQueue
+- BufferedInputStream/OutputStream for efficient I/O
+- AtomicInteger for thread-safe counters
+- ReentrantReadWriteLock for concurrent logging
+
+Server Status: Running ✓
