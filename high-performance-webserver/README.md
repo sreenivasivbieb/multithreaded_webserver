@@ -1,217 +1,204 @@
 # Multi-Threaded Java Web Server
 
-A simple HTTP/1.1 web server built in Java that can handle multiple clients at the same time using a thread pool.
+A simple HTTP/1.1 web server I built to understand how web servers work and learn about concurrent programming in Java.
 
-## Features
+## What This Project Does
 
-- HTTP/1.1 protocol support
-- Multi-threaded with thread pool (10-50 threads)
-- Serves static files (HTML, CSS, JavaScript, images, etc.)
-- Handles multiple concurrent connections
-- Connection timeout handling
-- Simple logging system
-- Directory listing
+This is a basic web server that can serve files (HTML, CSS, images, etc.) to multiple users at the same time. When you visit `http://localhost:8080/index.html`, the server reads the file from the `www` folder and sends it back to your browser.
 
-## What I Learned
+## Key Concepts I Learned
 
-Building this project helped me understand:
-- How web servers work under the hood
-- Multi-threaded programming and thread pools
-- Socket programming in Java
-- HTTP protocol basics
-- Resource management and cleanup
-- Handling concurrent requests safely
+### 1. Socket Programming
+- A socket is like a phone connection between the server and client
+- The server listens on a port (8080) waiting for connections
+- When a client connects, both sides can send/receive data
+
+```java
+ServerSocket serverSocket = new ServerSocket(8080);  // Listen on port 8080
+Socket clientSocket = serverSocket.accept();          // Wait for a client
+```
+
+### 2. Multi-Threading
+- Without threads, the server can only handle one client at a time
+- With threads, multiple clients can be served simultaneously
+- Each client connection runs in its own thread
+
+**Problem:** If 50 people connect, we'd create 50 threads. Too many threads = crash!
+
+### 3. Thread Pool (The Important Part)
+- Instead of creating unlimited threads, we use a **thread pool**
+- Think of it like a restaurant with 10-50 waiters (threads)
+- When a customer (client) arrives, an available waiter serves them
+- When done, the waiter becomes available again
+- If all waiters are busy, customers wait in line (queue)
+
+```java
+ThreadPoolExecutor pool = new ThreadPoolExecutor(
+    10,    // Start with 10 threads
+    50,    // Max 50 threads
+    60,    // Kill idle threads after 60 seconds
+    TimeUnit.SECONDS,
+    new ArrayBlockingQueue<>(100)  // Queue up to 100 requests
+);
+```
+
+### 4. HTTP Protocol Basics
+HTTP is how browsers and servers talk. A request looks like:
+```
+GET /index.html HTTP/1.1
+Host: localhost
+```
+
+A response looks like:
+```
+HTTP/1.1 200 OK
+Content-Type: text/html
+Content-Length: 1234
+
+<html>...</html>
+```
+
+### 5. Resource Management
+- Every socket connection uses system resources (memory, file handles)
+- Must close connections properly or you'll run out of resources
+- Used `try-with-resources` to ensure cleanup happens
 
 ## Project Structure
 
 ```
 src/com/webserver/
-├── WebServer.java              # Main server
+├── WebServer.java              # Main server - accepts connections
 ├── core/
-│   ├── ServerConfig.java       # Configuration
-│   └── ThreadPoolManager.java  # Thread pool
+│   ├── ServerConfig.java       # Reads config file
+│   └── ThreadPoolManager.java  # Manages the thread pool
 ├── handler/
-│   └── ConnectionHandler.java  # Handles each request
+│   └── ConnectionHandler.java  # Handles one client request
 ├── http/
-│   ├── HttpRequest.java        # Request parser
-│   └── HttpResponse.java       # Response builder
+│   ├── HttpRequest.java        # Parses HTTP requests
+│   └── HttpResponse.java       # Builds HTTP responses
 ├── util/
-│   └── Logger.java             # Logging
+│   └── Logger.java             # Prints log messages
 └── test/
-    └── TestClient.java         # Testing tool
+    └── TestClient.java         # Tests the server with multiple clients
 
-www/                            # Web files
-config.properties              # Settings
-pom.xml                        # Maven config
+www/                # Files the server serves (HTML, CSS, etc.)
+config.properties   # Server settings (port, threads, etc.)
 ```
 
-## 🛠️ Technical Implementation
+## How It Works (Step by Step)
 
-### Build System
-- **Maven** - Industry-standard dependency management and build automation
-- **Automated Compilation** - Single-command build process
-- *How It Works
-
+```
 1. Server starts and listens on port 8080
-2. When a client connects, the connection is given to a worker thread from the pool
-3. The worker thread reads the HTTP request
-4. It finds and serves the requested file from the `www` folder
-5. Sends the response back to the client
-6. Connection is closed and thread returns to the pool
-
-The thread pool ensures we don't create too many threads and crash the system. or higher
-- Apache Maven 3.6+ (for build automation)
-
-### Build with Maven
-
-Navigate to the project directory:
-
-```bash
-# Clean and compile
-mvn clean compile
-
-# Package as executable JAR
-mvn clean package
-
-# Run directly with Maven
-mvn exec:java
+   ↓
+2. Browser connects: "GET /index.html"
+   ↓
+3. Server gives connection to a thread from the pool
+   ↓
+4. Thread reads the request
+   ↓
+5. Thread finds www/index.html and reads it
+   ↓
+6. Thread sends: "HTTP/1.1 200 OK" + file content
+   ↓
+7. Connection closes, thread returns to pool
+   ↓
+8. Thread is ready for next client
 ```
 
-### Running the Server
+**Key Point:** Multiple clients can be at different steps simultaneously because each has their own thread!
 
-**Option 1: Using Maven**
+## How to Run
+
+**Requirements:** Java JDK 8 or newer
+
+**Step 1: Compile**
 ```bash
-mvn exec:java
+javac -d bin src/com/webserver/*.java src/com/webserver/core/*.java src/com/webserver/handler/*.java src/com/webserver/http/*.java src/com/webserver/util/*.java src/com/webserver/test/*.java
 ```
 
-**Option 2: Using JAR**
+**Step 2: Run**
 ```bash
-java -jar target/high-performance-webserver-1.0.0-jar-with-dependencies.jar
+java -cp bin com.webserver.WebServer
 ```
 
-The server will start on port 8080 (configurable in `config.properties`).
+**Step 3: Test**
+Open http://localhost:8080 in your browser
 
-**Note**: The server looks for `config.properties` and `www/` directory in the current working directory. Always run from the project root.
+Press `Ctrl+C` to stop the server.
 
-### Testing
-
-Open in browser:
-- http://localhost:8080/
-- http://localhost:8080/about.html
-- http://localhost:8080/test.txt
-
-Run load test (in another terminal):
+### Load Testing
+Test with multiple clients (in another terminal):
 ```bash
-# Simple test
-java -cp bin com.webserver.test.TestClient
-
-# Load test with 50 clients
 java -cp bin com.webserver.test.TestClient load 50 10
 ```
+This simulates 50 clients making 10 requests each.
 
 ## Configuration
 
-You can change settings in `config.properties`:
+Edit `config.properties` to change settings:
 
 ```properties
-server.port=8080                # Change port
-server.documentRoot=www         # Where web files are
-threadPool.coreSize=10          # Starting threads
-threadPool.maxSize=50           # Max threads
-socket.timeout=30000            # Connection timeout
-log.level=INFO                  # Logging detail
+server.port=8080           # Server port
+threadPool.coreSize=10     # Starting number of threads
+threadPool.maxSize=50      # Maximum threads
+threadPool.queueCapacity=100  # How many requests can wait in queue
+socket.timeout=30000       # 30 second timeout for connections
 ```
 
-## Performance
+## What I Learned About Concurrency
 
-The thread pool handles around 50 concurrent clients pretty well without crashing.
-
-Example test result:
+### The Problem Without Thread Pool:
 ```
-50 clients x 10 requests = 500 total requests
-Successful: 500
-Failed: 0
-Time: ~2-3 seconds
-```
-
-## Technical Details
-
-**Thread Pool:**
-- Starts with 10 threads
-- Can grow up to 50 threads
-- Queues up to 100 requests
-
-**Features:**
-- Parses HTTP requests properly
-- Serves different file types (HTML, CSS, JS, images)
-- Handles timeouts so connections don't hang forever
-- Cleans up resources properly
-- Simple logging to track what's happening
-
-## Challenges I Faced
-
-- Getting thread synchronization right took some time
-- Understanding how HTTP requests are structured
-- Making sure resources get cleaned up properly
-- Preventing directory traversal security issues
-- Debugging concurrent issues
-
-## Future Improvements
-
-- Add HTTPS support
-- Implement keep-alive connections
-- Add caching for better performance
-- Support for larger files
-- Better error pages
-bash
-# 1. Build with Maven
-mvn clean package
-
-# 2. Run Server
-mvn exec:java
-# OR
-java -jar target/high-performance-webserver-1.0.0.jar
-
-# 3. Test (in another terminal)
-mvn exec:java -Dexec.mainClass="com.webserver.test.TestClient" -Dexec.args="load 50 10"
----
-
-## 🚀 Quick Start Commands
-
-```bash
-# 1. Build with Maven
-mvn clean package
-
-# 2. Run Server
-mvn exec:java
-# OR
-java -jar target/high-performance-webserver-1.0.0-jar-with-dependencies.jar
-
-# 3. Test (in another terminal)
-mvn exec:java -Dexec.mainClass="com.webserver.test.TestClient" -Dexec.args="load 50 10"
-
-# 4. Access via browser
-# http://localhost:8080/
+Client 1 connects → Create Thread 1
+Client 2 connects → Create Thread 2
+Client 3 connects → Create Thread 3
+...
+Client 1000 connects → Create Thread 1000 → CRASH! (Out of memory)
 ```
 
-**Server Output:**
+### The Solution With Thread Pool:
 ```
-[2025-12-18 10:30:45.123] [INFO] [main] Web Server started on port 8080
-[2025-12-18 10:30:45.125] [INFO] [main] Thread pool size: 10-50
-[2025-12-18 10:30:45.126] [INFO] [main] Document root: www
+Start with 10 threads ready to work
+Client 1 connects → Use Thread 1
+Client 2 connects → Use Thread 2
+...
+Client 11 connects → Wait in queue
+When Thread 1 finishes → Thread 1 handles Client 11
 ```
+
+This is much more efficient!
+
+## Security Features
+
+**Directory Traversal Prevention:**
+Prevents requests like `GET /../../../etc/passwd` from accessing files outside the `www` folder.
+
+**Timeout Handling:**
+If a client connects but doesn't send a request for 30 seconds, the connection is closed to free resources.
 
 ## Common Issues
 
-**Port 8080 already in use?**
-Change the port in `config.properties` to something like 8081.
+**Port already in use?**
+Change `server.port` in config.properties to 8081 or another port.
 
-**Can't find config.properties?**
-Make sure you're running from the project root folder.
+**Can't find www folder?**
+Make sure you run from the project root where `www/` and `config.properties` exist.
 
-**Compilation errors?**
-Make sure the `bin` directory exists: `mkdir bin`
+**Compilation error?**
+Create the bin directory first: `mkdir bin`
 
-## What's Next
+## Challenges I Faced
 
-This was a fun learning project! It helped me understand how real web servers like Apache or Nginx work behind the scenes. The concurrent programming part was challenging but rewarding.
+1. **Thread synchronization** - Making sure multiple threads don't mess up shared data
+2. **Resource cleanup** - Ensuring sockets close properly even when errors occur
+3. **HTTP parsing** - Understanding request/response format
+4. **Debugging concurrent issues** - Much harder than single-threaded programs!
+
+## What This Project Demonstrates
+
+✓ Socket programming (network communication)  
+✓ Multi-threaded programming (concurrency)  
+✓ Thread pool pattern (efficient resource use)  
+✓ HTTP protocol understanding  
+✓ Resource management (cleanup, timeouts)  
+✓ Basic security (directory traversal prevention)
