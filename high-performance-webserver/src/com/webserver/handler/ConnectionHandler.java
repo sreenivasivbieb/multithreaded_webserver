@@ -4,7 +4,6 @@ import com.webserver.core.ServerConfig;
 import com.webserver.http.HttpRequest;
 import com.webserver.http.HttpResponse;
 import com.webserver.util.Logger;
-
 import java.io.*;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
@@ -12,10 +11,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-/**
- * Handles individual client connections
- * Implements efficient streaming I/O and proper resource management
- */
+// Handles each client connection in a separate thread
 public class ConnectionHandler implements Runnable {
     private final Socket clientSocket;
     private final ServerConfig config;
@@ -46,9 +42,7 @@ public class ConnectionHandler implements Runnable {
         }
     }
 
-    /**
-     * Handle the client connection
-     */
+    // Process the request and send response
     private void handleConnection(String clientInfo) throws IOException {
         InputStream input = clientSocket.getInputStream();
         OutputStream output = clientSocket.getOutputStream();

@@ -4,17 +4,13 @@ import com.webserver.core.ServerConfig;
 import com.webserver.core.ThreadPoolManager;
 import com.webserver.handler.ConnectionHandler;
 import com.webserver.util.Logger;
-
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-/**
- * High-Performance Multi-Threaded HTTP/1.1 Web Server
- * Handles multiple concurrent client connections using a bounded thread pool
- */
+// Main web server class - handles incoming connections and routes them to worker threads
 public class WebServer {
     private final ServerConfig config;
     private final ThreadPoolManager threadPool;
@@ -29,9 +25,7 @@ public class WebServer {
         this.logger = Logger.getInstance();
     }
 
-    /**
-     * Start the web server
-     */
+    // Start the server
     public void start() throws IOException {
         if (running.get()) {
             logger.warn("Server is already running");
@@ -51,9 +45,7 @@ public class WebServer {
         acceptorThread.start();
     }
 
-    /**
-     * Accept incoming client connections
-     */
+    // Keep accepting connections until server stops
     private void acceptConnections() {
         while (running.get()) {
             try {

@@ -7,10 +7,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-/**
- * Structured logging system for production-ready reliability
- * Thread-safe singleton logger with multiple log levels
- */
+// Simple logger for the web server
 public class Logger {
     private static Logger instance;
     private static final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
@@ -42,9 +39,7 @@ public class Logger {
         this.dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
     }
 
-    /**
-     * Get singleton instance
-     */
+    // Get logger instance
     public static Logger getInstance() {
         if (instance == null) {
             lock.writeLock().lock();

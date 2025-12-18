@@ -7,10 +7,7 @@ import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * HTTP/1.1 Request Parser
- * Parses incoming HTTP requests according to RFC 2616
- */
+// Parse HTTP requests
 public class HttpRequest {
     private String method;
     private String uri;
@@ -24,9 +21,7 @@ public class HttpRequest {
         this.valid = false;
     }
 
-    /**
-     * Parse HTTP request from input stream
-     */
+    // Parse the HTTP request
     public static HttpRequest parse(InputStream inputStream) throws IOException {
         HttpRequest request = new HttpRequest();
         BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
